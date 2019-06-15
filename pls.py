@@ -11,19 +11,16 @@ from math import sqrt, acos, degrees
 # Starting parcing video to frames and gett coordinates from all frames
 def startParcer() :
     frames = {}
-    cap = cv2.VideoCapture('/Users/reilganpi/42/hakaton/tf-pose-estimation/kekandos/true_1.mov')
+    cap = cv2.VideoCapture('/Users/reilganpi/42/hakaton/tf-pose-estimation/kekandos/right_sit.mov')
     success, image = cap.read()
     count = 0
     i = 0
     while success:
         cv2.imwrite("frame%d.jpg" % count, image)   # save frame as JPEG file
-        if cv2.waitKey(10) == 27:                   # exit if Escape is hit
-          break
-        while i < 20:
+        while i < 10:
             success, image = cap.read()
             i += 1
         proc = subprocess.Popen("python3 /Users/reilganpi/42/hakaton/tf-pose-estimation/run.py --model=mobilenet_thin --output_json=/Users/reilganpi/42/hakaton/tf-pose-estimation/kekandos/json/ --resize=432x368 --image=/Users/reilganpi/42/hakaton/tf-pose-estimation/frame%d.jpg" % count, shell=True, stdout=subprocess.PIPE)
-        out = proc.stdout.readlines()
         with open(os.path.join('/Users/reilganpi/42/hakaton/tf-pose-estimation/kekandos/json/', '{0}_keypoints.json'.format(str(0).zfill(12))), 'r') as outfile:
             flat = json.load(outfile)
         i = 0
@@ -31,14 +28,19 @@ def startParcer() :
         count += 1
     return frames, count
 
+def checkKnee(leg):
+    a = (leg['Knee']['x'] * 100 / leg['Foot']['x'])
+    if a > 70 and a < 100:
+        return 1
+    else :
+        print("Your knees too far")
+        return 0
 
 def checkBodyDegree(leg):
     def scalar(x1, y1, x2, y2):
         return x1 * x2 + y1 * y2
-
     def module(x, y):
         return sqrt(x ** 2 + y ** 2)
-
     ax = (leg['Knee']['x']) - (leg['Butt']['x'])
     bx = (leg['Shoulder']['x']) - (leg['Butt']['x'])
     ay = (leg['Knee']['y']) - (leg['Butt']['y'])
@@ -49,6 +51,7 @@ def checkBodyDegree(leg):
     if ang > 40 :
         return 1
     else :
+        print("You leaned too hard")
         return 0
 
 def checkLegsDegree(leg):
@@ -68,6 +71,7 @@ def checkLegsDegree(leg):
     if ang > 65  and ang < 115 :
         return 1
     else :
+        print("You sat down too hard or not hard enough")
         return 0
 
 
@@ -85,18 +89,14 @@ def checkSit(flat):
                'Foot': {'x': flat_l[26], 'y': flat_l[27]},
                'Shoulder': {'x' :flat_l[2], 'y' : flat_l[3]}}
         return coord
-    error = 0
-    if ((flat[20] == 0 or flat[32] == 0) and (flat[2] != '0.0' and (flat[22] != '0.0' and flat[24] != '0.0' and flat[26] != '0.0'))) :
-        # print("left site")
+    if ((flat[20] == 0 or flat[32] == 0) and (flat[2] != '0.0' and (flat[22] != '0.0' and flat[24] != '0.0' and flat[26] != '0.0')) and flat[0] < flat[22]) :
         coord = LeftCoord(flat)
-    elif ((flat[26] == 0 or flat[34] == 0) and (flat[2] != '0.0' and (flat[16] != '0.0' and flat[18] != '0.0' and flat[20] != '0.0'))) :
-        # print("right site")
+    elif ((flat[26] == 0 or flat[34] == 0) and (flat[2] != '0.0' and (flat[16] != '0.0' and flat[18] != '0.0' and flat[20] != '0.0')) and flat[0] > flat[16]) :
         coord = RightCoord(flat)
     else :
-        print("razvernis!!!")
-    if error == 2 :
+        print("File is not valid, please get new video")
         return 0
-    if checkBodyDegree(coord) == 1 and checkLegsDegree(coord) == 1 :
+    if checkBodyDegree(coord) == 1 and checkLegsDegree(coord) == 1 and checkKnee(coord) == 1:
         return 1
     else :
         return 0
@@ -110,8 +110,6 @@ for i in range(count):
     neck[i] = coord
 sorted_n = sorted(neck.items(), key = operator.itemgetter(1), reverse = 1)
 if checkSit(frames[sorted_n[0][0]]) :
-    print("nice sit")
-# elif checkSit(frames[sorted_n[0][1]]) :
-#     print("nice sit")
+    print("Success squat")
 else :
-    print("prisjad' rovno bljat'")
+    print("Try again")
