@@ -13,9 +13,6 @@ TG_TOKEN = "849661734:AAEppr89hTnLZ0qRV3KacJAE8hRKV88Gx5E"
 def hello_name(user):
    return render_template('hello.html', name = user)
 
-if __name__ == '__main__':
-   app.run(debug = True)
-   app.run()
 def do_start(bot: Bot, update: Update):
     bot.send_message(
         chat_id=update.message.chat_id,
@@ -49,3 +46,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+   app.run(debug = True)
+   app.run()
