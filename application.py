@@ -5,7 +5,7 @@ from telegram.ext import CommandHandler
 from telegram.ext import MessageHandler
 from telegram.ext import Filters
 
-from botkavovka.config import TG_TOKEN
+from config.py import TG_TOKEN
 
 @app.route('/hello/<user>')
 def hello_name(user):
