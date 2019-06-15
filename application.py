@@ -4,8 +4,10 @@ from telegram.ext import Updater
 from telegram.ext import CommandHandler
 from telegram.ext import MessageHandler
 from telegram.ext import Filters
+from flask import Flask
+app = Flask(__name__)
 
-from config.py import TG_TOKEN
+#TG_TOKEN = "849661734:AAEppr89hTnLZ0qRV3KacJAE8hRKV88Gx5E"
 
 @app.route('/hello/<user>')
 def hello_name(user):
