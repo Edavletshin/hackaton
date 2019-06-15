@@ -3,28 +3,34 @@ import os
 import cv2
 import numpy as np
 import math
+import subprocess
+import operator
 from math import sqrt, acos, degrees
 
-cap = cv2.VideoCapture('false_sit.mov')
-success, image = cap.read()
-count = 0
-i = 0
-while success:
-    cv2.imwrite("frame%d.jpg" % count, image)  # save frame as JPEG file
-    if cv2.waitKey(10) == 27:  # exit if Escape is hit
-        break
-    count += 1
-    while i < 7:
-        success, image = cap.read()
-        i += 1
+
+# Starting parcing video to frames and gett coordinates from all frames
+def startParcer() :
+    frames = {}
+    cap = cv2.VideoCapture('/Users/reilganpi/42/hakaton/tf-pose-estimation/kekandos/true_1.mov')
+    success, image = cap.read()
+    count = 0
     i = 0
+    while success:
+        cv2.imwrite("frame%d.jpg" % count, image)   # save frame as JPEG file
+        if cv2.waitKey(10) == 27:                   # exit if Escape is hit
+          break
+        while i < 20:
+            success, image = cap.read()
+            i += 1
+        proc = subprocess.Popen("python3 /Users/reilganpi/42/hakaton/tf-pose-estimation/run.py --model=mobilenet_thin --output_json=/Users/reilganpi/42/hakaton/tf-pose-estimation/kekandos/json/ --resize=432x368 --image=/Users/reilganpi/42/hakaton/tf-pose-estimation/frame%d.jpg" % count, shell=True, stdout=subprocess.PIPE)
+        out = proc.stdout.readlines()
+        with open(os.path.join('/Users/reilganpi/42/hakaton/tf-pose-estimation/kekandos/json/', '{0}_keypoints.json'.format(str(0).zfill(12))), 'r') as outfile:
+            flat = json.load(outfile)
+        i = 0
+        frames[count] = flat
+        count += 1
+    return frames, count
 
-
- # def checkKnee(leg):
- #     i = 0
-
-#
-# def checkSitDeep(leg) :
 
 def checkBodyDegree(leg):
     def scalar(x1, y1, x2, y2):
@@ -40,8 +46,10 @@ def checkBodyDegree(leg):
     cos = scalar(ax, ay, bx, by) / (module(ax, ay) * module(bx, by))
     ang = acos(cos)
     ang = round(math.degrees(ang), 2)
-
-    print("Body", ang)
+    if ang > 40 :
+        return 1
+    else :
+        return 0
 
 def checkLegsDegree(leg):
     def scalar(x1, y1, x2, y2):
@@ -57,7 +65,10 @@ def checkLegsDegree(leg):
     ang = acos(cos)
     ang = round(math.degrees(ang), 2)
 
-    print("Legs", ang)
+    if ang > 65  and ang < 115 :
+        return 1
+    else :
+        return 0
 
 
 # print(degrees(acos(cos)))
@@ -74,47 +85,33 @@ def checkSit(flat):
                'Foot': {'x': flat_l[26], 'y': flat_l[27]},
                'Shoulder': {'x' :flat_l[2], 'y' : flat_l[3]}}
         return coord
-    if(flat[20] == 0 or flat[32] == 0) :
-        print("left site")
+    error = 0
+    if ((flat[20] == 0 or flat[32] == 0) and (flat[2] != '0.0' and (flat[22] != '0.0' and flat[24] != '0.0' and flat[26] != '0.0'))) :
+        # print("left site")
         coord = LeftCoord(flat)
-    elif (flat[26] == 0 or flat[34] == 0):
-        print("right site")
+    elif ((flat[26] == 0 or flat[34] == 0) and (flat[2] != '0.0' and (flat[16] != '0.0' and flat[18] != '0.0' and flat[20] != '0.0'))) :
+        # print("right site")
         coord = RightCoord(flat)
     else :
         print("razvernis!!!")
-    checkBodyDegree(coord)
-    checkLegsDegree(coord)
-    # checkSitDeep(leg)
-    # checkKnee()
-    #
-    # if(yButt <= yKnee) :
-    #         return bool(1)
-    return bool(1)
+    if error == 2 :
+        return 0
+    if checkBodyDegree(coord) == 1 and checkLegsDegree(coord) == 1 :
+        return 1
+    else :
+        return 0
 
 
-with open(os.path.join('/Users/mariaugorets/Downloads/', '{0}_keypoints.json'.format(str(0).zfill(12))), 'r') as outfile:
-    flat = json.load(outfile)
-
-if checkSit(flat):
+frames , count = startParcer()
+neck = {}
+i = 0
+for i in range(count):
+    coord = frames[i][3]
+    neck[i] = coord
+sorted_n = sorted(neck.items(), key = operator.itemgetter(1), reverse = 1)
+if checkSit(frames[sorted_n[0][0]]) :
     print("nice sit")
-else:
+# elif checkSit(frames[sorted_n[0][1]]) :
+#     print("nice sit")
+else :
     print("prisjad' rovno bljat'")
-
-# flat = [628, 380, #0
-#         622, 616, #1
-#         417, 559,#2
-#         0.0, 0.0, #3
-#         0.0, 0.0, #4
-#         922, 616, #5 -10 11
-#         1000, 814, #6
-#         0.0, 0.0, #7
-#         0.0, 0.0, #8
-#         0.0, 0.0, #9
-#         0.0, 0.0, #10 -20 21
-#         0.0, 0.0, #11
-#         0.0, 0.0, #12
-#         0.0, 0.0, #13
-#         578, 347, #14
-#         672, 337, #15 -30 31
-#         511, 385, #16
-#         750, 380] #17
