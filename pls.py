@@ -11,7 +11,7 @@ from math import sqrt, acos, degrees
 # Starting parcing video to frames and gett coordinates from all frames
 def startParcer() :
     frames = {}
-    cap = cv2.VideoCapture('/Users/reilganpi/42/hakaton/tf-pose-estimation/kekanndos/false_sit.mov')
+    cap = cv2.VideoCapture('/Users/reilganpi/42/hakaton/tf-pose-estimation/kekanndos/false_2_toomuch.mov')
     success, image = cap.read()
     count = 0
     i = 0
