@@ -11,7 +11,7 @@ from math import sqrt, acos, degrees
 # Starting parcing video to frames and gett coordinates from all frames
 def startParcer() :
     frames = {}
-    cap = cv2.VideoCapture('/Users/reilganpi/42/hakaton/tf-pose-estimation/kekandos/right_sit.mov')
+    cap = cv2.VideoCapture('/Users/reilganpi/42/hakaton/tf-pose-estimation/kekanndos/false_sit.mov')
     success, image = cap.read()
     count = 0
     i = 0
@@ -20,8 +20,9 @@ def startParcer() :
         while i < 10:
             success, image = cap.read()
             i += 1
-        proc = subprocess.Popen("python3 /Users/reilganpi/42/hakaton/tf-pose-estimation/run.py --model=mobilenet_thin --output_json=/Users/reilganpi/42/hakaton/tf-pose-estimation/kekandos/json/ --resize=432x368 --image=/Users/reilganpi/42/hakaton/tf-pose-estimation/frame%d.jpg" % count, shell=True, stdout=subprocess.PIPE)
-        with open(os.path.join('/Users/reilganpi/42/hakaton/tf-pose-estimation/kekandos/json/', '{0}_keypoints.json'.format(str(0).zfill(12))), 'r') as outfile:
+        proc = subprocess.Popen("python3 /Users/reilganpi/42/hakaton/tf-pose-estimation/run.py --model=mobilenet_thin --output_json=/Users/reilganpi/42/hakaton/tf-pose-estimation/kekanndos/json/ --resize=432x368 --image=/Users/reilganpi/42/hakaton/tf-pose-estimation/frame%d.jpg" % count, shell=True, stdout=subprocess.PIPE)
+        out = proc.stdout.readlines()
+        with open(os.path.join('/Users/reilganpi/42/hakaton/tf-pose-estimation/kekanndos/json/', '{0}_keypoints.json'.format(str(0).zfill(12))), 'r') as outfile:
             flat = json.load(outfile)
         i = 0
         frames[count] = flat
